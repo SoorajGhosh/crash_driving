@@ -1,379 +1,3 @@
-/*
-
-//===============CANVAS=================
-
-var canvas = (function(){
-	var w, h, myCanvas;
-	w = window.innerWidth;
-	h = window.innerHeight;
-	myCanvas = document.getElementById('myCanvas');
-	myCanvas.width = w;
-	myCanvas.height = h;
-	ctx = myCanvas.getContext('2d')
-	ctx.fillStyle='white';
-	ctx.save();
-	return {
-		canvasPlane : myCanvas,
-		context : ctx,
-		canvasWidth: myCanvas.width,
-		canvasHeight: myCanvas.height
-	}
-})();
-
-
-//===============RECTANGLE=================
-var drawRect = function(x,y,w,h,col){
-	this.x = x;
-	this.y = y;
-	this.width = w;
-	this.height =h;
-	this.color = col;
-	this.draw = function(image){
-		ctx = canvas.context;
-		ctx.fillStyle = col;
-		if (image){
-			ctx.drawImage(image, x, y, w, h);
-		}else{
-			ctx.fillRect(x, y, w, h);
-		}
-		ctx.restore();
-	};
-};
-
-
-//===============ROAD===================
-
-var rectangles = (function(canvas){
-	var roadObj = function(){
-		var roadColor, roadWidth, roadHeight, roadPos;
-		roadColor = 'rgb(43,42,42)';
-		roadWidth = canvas.canvasWidth/4;
-		roadHeight = canvas.canvasHeight;
-		roadPos = [roadWidth*1.5,0];
-		roadRect = new drawRect(roadPos[0], roadPos[1], roadWidth,roadHeight, roadColor);
-		roadRect.draw(image=false);
-		return {
-			roadColor,
-			roadWidth,
-			roadHeight,
-			roadPos,
-			rect:roadRect
-		}
-	};
-
-
-	var stripObj = function(posY){
-		var stripColor, stripWidth, stripHeight, stripPos, stripRect;
-		stripColor = 'rgb(225, 232, 242)';
-		stripWidth = canvas.canvasWidth/52;
-		stripHeight = canvas.canvasHeight/4;
-		stripPos = [stripWidth*25.5,posY];
-		stripRect = new drawRect(stripPos[0], stripPos[1], stripWidth,stripHeight, stripColor);
-		stripRect.draw();
-		
-		return {
-			stripColor,
-			stripWidth,
-			stripHeight,
-			stripPos,
-			stripRect
-		}
-	};
-
-
-	var barrierObj = function(posX,posY){
-		var barrierColor, barrierWidth, barrierHeight, barrierPos, barrierRect;
-		barrierColor = 'rgb(110, 50, 21)';
-		barrierWidth = canvas.canvasWidth/75;
-		barrierHeight = canvas.canvasHeight/8;
-		barrierPos = [posX,posY];
-		barrierRect = new drawRect(barrierPos[0], barrierPos[1], barrierWidth, barrierHeight, barrierColor);
-		barrierRect.draw();
-		
-		return {
-			barrierColor,
-			barrierWidth,
-			barrierHeight,
-			barrierPos,
-			barrierRect
-		}
-	};
-	
-
-	var carObj = function(carImg, posX, posY){
-		var carColor, carWidth, carHeight, carPos,img;
-		carColor = 'rgb(235, 64, 52)';
-		carWidth = canvas.canvasWidth/16;
-		carHeight = canvas.canvasHeight/4;
-		carPos = [posX,posY];
-		carRect = new drawRect(carPos[0], carPos[1], carWidth,carHeight, carColor);
-		carImg.style.height=carHeight;
-		carImg.style.width=carWidth;
-		carRect.draw(image=carImg);
-		
-		return {
-			carColor,
-			carWidth,
-			carHeight,
-			carPos,
-			carImg,
-			rect:carRect
-		}
-	};
-
-
-
-	return {
-		roadObj,
-		stripObj,
-		carObj,
-		barrierObj
-	}
-	
-})(canvas);
-
-
-
-
-
-
-//===============PLAYER CAR=============
-//===============ENEMY CARS=============
-//===============SCORE==================
-
-
-
-
-
-
-
-
-//===============CONTROLLER=============
-
-var controller = (function(){
-	var roadSpeed = 3;
-	var playerSpeed = roadSpeed+2;
-	var enemyCarSpeed = roadSpeed-2;
-
-	var road = new rectangles.roadObj();
-
-	var barrier = rectangles.barrierObj(90,100);
-
-	var stripPosY1=0;
-	var strip1 = new rectangles.stripObj(stripPosY1);
-
-	var stripPosY2=stripPosY1+strip1.stripHeight + 50;
-	var strip2 = rectangles.stripObj(stripPosY2);
-	
-	var stripPosY3=stripPosY2 + strip1.stripHeight + 50;
-	var strip3 = rectangles.stripObj(stripPosY3);
-
-	var playerCarPosX = (canvas.canvasWidth/16)*7.5;
-	var playerCarPosY = (canvas.canvasHeight-(canvas.canvasHeight/4)*1.2)
-	var playerCarImg = document.getElementById('player-car-image');
-	var playerCar = new rectangles.carObj(playerCarImg,playerCarPosX,playerCarPosY);
-
-	var enemyCars;
-		
-
-
-	
-	// STRIP MOVEMENT
-	var stripMove = function(strip, speed){
-			if (strip.stripPos[1]>=canvas.canvasHeight){
-				strip = new rectangles.stripObj(0);
-			} else if ((strip.stripPos[1]+strip.stripHeight)>canvas.canvasHeight){
-				var newPosY = (strip.stripPos[1]-canvas.canvasHeight);
-				var newStrip = new rectangles.stripObj(newPosY);
-				var speedUp = strip.stripPos[1]+=speed;
-				strio = new rectangles.stripObj(speedUp);
-			} else {
-				var speedUp = strip.stripPos[1]+=speed;
-				strip = new rectangles.stripObj(speedUp);
-			}
-			return strip;
-	};
-
-	function getRndInteger(min, max) {
-		return Math.floor(Math.random() * (max - min) ) + min;
-	}
-
-	function enemyCarMove(carsArray,speed){
-		for (var i=0; i<carsArray.length; i++){
-			var car, carPosX, carPosY,preCar;
-			car = carsArray[i];
-			carPosY = car.carPos[1];
-			carPosX = car.carPos[0];
-			if (carPosY > canvas.canvasHeight){
-				if (i===0){
-					preCar = carsArray[carsArray.length-1];
-				} else {
-					preCar = carsArray[i-1];
-				}
-				carPosY = preCar.carPos[1] - (preCar.carHeight*getRndInteger(3,6));	
-				carPosX = getRndInteger(road.roadPos[0], (road.roadPos[0]+road.roadWidth-playerCar.carWidth));
-			} else {
-				carPosY = car.carPos[1]+speed;
-				carPosX = car.carPos[0];
-			};
-			newCar = new rectangles.carObj(car.carImg,carPosX,carPosY);
-			carsArray[i]=newCar;
-		}
-		return carsArray;
-	}
-	
-
-	//ENEMY CAR POSITIONS
-	var spawnEnemyCars = function(number){
-		var roadBoundariesX = [road.roadPos[0], road.roadPos[0]+road.roadWidth];
-		var roadBoundariesY = [road.roadPos[1], road.roadPos[1]+road.roadHeight];
-		var enemyCarImg = document.getElementById('enemy-car-image');
-		var enemyCarsArray = [];
-		
-		
-		for (var i=0; i<number; i++) {
-			var carPosX = getRndInteger(road.roadPos[0], (road.roadPos[0]+road.roadWidth-playerCar.carWidth));
-			if (i==0){
-				var carPosY = road.roadPos[1]-playerCar.carHeight;
-			} else {
-				var preEnemyCar = enemyCarsArray[i-1];
-				var carPosY = preEnemyCar.carPos[1]-(preEnemyCar.carHeight*getRndInteger(3,6));
-				
-			}
-		
-			var car = new rectangles.carObj(enemyCarImg,carPosX ,carPosY);
-			enemyCarsArray.push(car);
-		};
-		return enemyCarsArray;
-	}
-
-
-
-	// CAR MOVEMENT
-	
-	window.addEventListener('keydown',function(event){
-		if (event.key==="ArrowLeft"){
-			playerCarPosX -= playerSpeed;
-		} else if (event.key==="ArrowRight"){
-			playerCarPosX += playerSpeed;
-		} else if (event.key==="ArrowUp"){
-			playerCarPosY -= playerSpeed;
-		} else if (event.key==="ArrowDown"){
-			playerCarPosY += playerSpeed;
-		}else if (event.key==="Escape"){
-			roadSpeed = 0;
-		}else if (event.key==="Enter"){
-			roadSpeed = 3;
-		}
-	});
-
-
-	function playerCarCrash(carPosX, carPosY){
-		roadBoundariesX = [road.roadPos[0], road.roadPos[0]+road.roadWidth];
-		roadBoundariesY = [road.roadPos[1], road.roadPos[1]+road.roadHeight];
-		carBoundariesX = [carPosX, carPosX+playerCar.carWidth];
-		carBoundariesY = [carPosY, carPosY+playerCar.carHeight];
-		if (carBoundariesX[0]<roadBoundariesX[0] || carBoundariesX[1]>roadBoundariesX[1] || carBoundariesY[0]<roadBoundariesY[0] || carBoundariesY[1]>roadBoundariesY[1] ){
-			return true;
-		} else {
-			return false;
-		}
-	};
-
-
-
-	function crashTest(arr, fn, pCar){
-		var crashed = false
-		for (var i=0; i<arr.length; i++){
-			if (fn(arr[i],pCar)){
-				crashed=true;
-				break;
-			}
-		}
-		return crashed;
-	}
-
-	function crashObj(crashObj,playerCar){
-		crashObjX = [crashObj.rect.x, crashObj.rect.x+crashObj.rect.width];
-		crashObjY = [crashObj.rect.y, crashObj.rect.y+crashObj.rect.height];
-		playerCarX = [playerCar.rect.x, playerCar.rect.x+playerCar.rect.width];
-		playerCarY = [playerCar.rect.y, playerCar.rect.y+playerCar.rect.height];
-
-		// Road Crash
-		if (crashObj.roadPos){
-			if (playerCarX[0]<crashObjX[0] || playerCarX[1]>crashObjX[1] || playerCarY[0]<crashObjY[0] || playerCarY[1]>crashObjY[1] ){
-				return true;
-			} else {
-				return false;
-			}
-		//Car Crash
-		} else if (crashObj.carPos){
-			if (( (crashObjY[1]>=playerCarY[0] && playerCarY[0]>=crashObjY[0]) ||
-				( (crashObjY[0]<=playerCarY[1] && playerCarY[1]<=crashObjY[1]))) && 
-				( (crashObjX[1]>=playerCarX[0] && playerCarX[0]>=crashObjX[0]) || 
-					(crashObjX[0]<=playerCarX[1] && playerCarX[1]<=crashObjX[1]) )) {
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-	};
-
-	function animate(){
-		playerSpeed = (roadSpeed===0) ? 0 : roadSpeed+2;
-		enemyCarSpeed = (roadSpeed===0) ? 0 : roadSpeed-2;
-		canvas.context.clearRect(0, 0, canvas.canvasWidth, canvas.canvasHeight);
-		road = new rectangles.roadObj();
-		barrier = rectangles.barrierObj(road.roadPos[0]-barrier.barrierWidth,0);
-		strip1 = stripMove(strip1,roadSpeed);
-		strip2 = stripMove(strip2,roadSpeed);
-		strip3 = stripMove(strip3,roadSpeed);
-		enemyCars = enemyCarMove(enemyCars, enemyCarSpeed);
-		crashableObjs = enemyCars.slice().concat([road]);
-		var crashed = crashTest(crashableObjs,crashObj,playerCar);
-		if (crashed) {
-			console.log('Your Car Crashed !');
-			playerCar = new rectangles.carObj(playerCarImg,playerCarPosX,playerCarPosY);
-		} else {
-			playerCar = new rectangles.carObj(playerCarImg,playerCarPosX,playerCarPosY);
-			window.requestAnimationFrame(animate);
-		}	
-	};
-
-	return {
-		init:function(){
-			console.log('Game Started.');
-			enemyCars = spawnEnemyCars(3);
-			window.requestAnimationFrame(animate);
-		},
-		canvas,
-		playerCar,
-		road
-	}
-})();
-
-
-// controller.init();
-
-// console.log(controller.playerCar);
-// console.log(rectangles)
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
 //===============CANVAS=================
 
 var canvas = (function(){
@@ -408,16 +32,24 @@ var rectangle = function(xPos, yPos, width, height, color, image=false, text=fal
 	this.color = color;
 	this.image = image;
 	this.text = text;
-	this.draw = function(scr=0,psd=false){
+	this.draw = function(scr=0,psd=false,stopped=false){
 		ctx = canvas.context;
 		ctx.fillStyle = this.color;
 		if (this.image){
 			ctx.drawImage(this.image, this.xPos, this.yPos, this.width, this.height);
-		} else if (this.text && psd){
+		} else if (this.text && (psd || stopped)){
 			ctx.font = '50px Arial';
 			ctx.textBaseline = "top";
 			ctx.textAlign = 'center';
 			ctx.fillText(this.text,this.xPos, this.yPos);
+			ctx.font = '30px Arial';
+			ctx.fillText('R (Restart)',this.xPos-10, this.yPos+170);
+			if (psd){
+				ctx.fillText('Esc (Unpause)',this.xPos-10, this.yPos+100);
+			} else if (stopped) {
+				ctx.font = '40px Arial';
+				ctx.fillText('Score: '+scr, this.xPos-10, this.yPos+100);
+			}			
 		} else if (this.text){
 			ctx.font = '20px Arial';
 			ctx.textBaseline = "top";
@@ -671,14 +303,14 @@ var main = (function(){
 		if (paused){											// Check If Paused
 			if (!stopped){
 				pausedMenu.draw();
-				pausedText.draw(0,true);
+				pausedText.draw(score,true);
 			}
 		}
 		
 		if (roadCrash() || enemyCarCrash(enemyCarArr.arr)){		// check if crashded and show the game over text
 			console.log('Crashed');
 			pausedMenu.draw();
-			gameOverText.draw(0,true);	
+			gameOverText.draw(score,false,true);	
 			stopped = true;
 			roadSpeed = 0;
 		} 
