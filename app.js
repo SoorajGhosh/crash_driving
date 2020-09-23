@@ -55,6 +55,8 @@ var rectangle = function(xPos, yPos, width, height, color, image=false, text=fal
 			ctx.textBaseline = "top";
 			ctx.textAlign = 'left';
 			ctx.fillText(this.text+scr,this.xPos, this.yPos);
+			ctx.font = '18px Arial';
+			ctx.fillText('Esc (Pause)',canvas.canvasWidth-110, this.yPos);
 		} else {
 			ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
 		}
@@ -212,7 +214,7 @@ var main = (function(){
 							width=canvas.canvasWidth/20, height=canvas.canvasHeight/3,
 							color='rgb(245, 5, 49)', false, 'Paused'
 						);
-
+		
 		gameOverText = new rectangle(xPos=(canvas.canvasWidth/20)*10, yPos=(canvas.canvasHeight/3), 
 							width=canvas.canvasWidth/20, height=canvas.canvasHeight/3,
 							color='rgb(245, 5, 49)', false, 'Game Over !'
